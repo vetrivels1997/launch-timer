@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Launch Countdown</title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+
+<style>
+
+/* animated background */
+.bg-animate{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:linear-gradient(270deg,#6366f1,#9333ea,#06b6d4);
+background-size:600% 600%;
+animation:bgMove 10s ease infinite;
+z-index:0;
+}
+
+@keyframes bgMove{
+0%{background-position:0% 50%}
+50%{background-position:100% 50%}
+100%{background-position:0% 50%}
+}
+
+/* DOOR REVEAL */
+.door{
+position:fixed;
+top:0;
+width:50%;
+height:100%;
+z-index:5;
+transition:transform 1s linear;
+}
+
+.left-bg{
+background-image:url("images/door-left.jpg");
+background-size:cover;
+background-position:center;
+}
+
+.right-bg{
+background-image:url("images/door-right.jpg");
+background-size:cover;
+background-position:center;
+}
+
+#doorLeft{ left:0; }
+#doorRight{ right:0; }
+
+/* loader */
+.loader{
+position:relative;
+width:120px;
+height:120px;
+display:flex;
+align-items:center;
+justify-content:center;
+}
+
+.loader-ring{
+position:absolute;
+width:120px;
+height:120px;
+border:6px solid rgba(255,255,255,.2);
+border-top:6px solid #fff;
+border-radius:50%;
+animation:spin 1s linear infinite;
+}
+
+@keyframes spin{
+0%{transform:rotate(0deg)}
+100%{transform:rotate(360deg)}
+}
+
+.button{
+background:#3681f3;
+color:white;
+padding:10px 20px;
+border-radius:6px;
+font-size:20px;
+}
+
+canvas{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+}
+
+</style>
+</head>
+
+<body class="text-white flex items-center justify-center min-h-screen bg-black">
+
+<div class="bg-animate"></div>
+
+<canvas id="fireworks"></canvas>
+
+<!-- music -->
+<audio id="bgMusic" autoplay loop>
+<source src="images/bgm.mp3" type="audio/mpeg">
+</audio>
+
+<!-- music toggle -->
+<div id="musicToggle" class="fixed top-5 right-5 z-20 bg-black/50 px-4 py-2 rounded cursor-pointer">
+🔊 Music On
+</div>
+
+<!-- doors -->
+<div id="doorLeft" class="door left-bg"></div>
+<div id="doorRight" class="door right-bg"></div>
+
+<!-- countdown -->
+<div id="countdownBox" class="text-center z-10">
+
+<h1 class="text-5xl font-bold mb-10">
+Get Ready, New Thing is Coming!<br><br>
+The Time Remains ⏳️
+</h1>
+
+<div class="flex gap-10 justify-center">
+
+<div>
+<p id="minutes" class="text-5xl font-bold">05</p>
+<p class="text-gray-300 text-sm">Minutes</p>
+</div>
+
+<div>
+<p id="seconds" class="text-5xl font-bold">00</p>
+<p class="text-gray-300 text-sm">Seconds</p>
+</div>
+
+</div>
+
+<br><br>
+
+<a href="javascript:void(0)" onclick="startFinalCountdown()" class="button">
+Start Countdown
+</a>
+
+</div>
+
+<!-- final 10 sec -->
+<div id="final10" class="hidden flex flex-col items-center text-center z-10">
+
+<div class="loader">
+<div class="loader-ring"></div>
+<span id="finalSec" class="text-5xl font-bold"></span>
+</div>
+
+<p class="mt-6 text-xl">Launching Our...</p>
+
+</div>
+
+<script>
+
+/* 5 minute countdown */
+let remaining = 50
+
+const minsEl = document.getElementById("minutes")
+const secsEl = document.getElementById("seconds")
+
+const countdownBox = document.getElementById("countdownBox")
+const final10 = document.getElementById("final10")
+const finalSec = document.getElementById("finalSec")
+
+const doorLeft = document.getElementById("doorLeft")
+const doorRight = document.getElementById("doorRight")
+
+/* fireworks */
+
+const canvas=document.getElementById("fireworks")
+const ctx=canvas.getContext("2d")
+
+canvas.width=window.innerWidth
+canvas.height=window.innerHeight
+
+let particles=[]
+
+function createFirework(){
+
+let x=Math.random()*canvas.width
+let y=Math.random()*canvas.height/2
+
+for(let i=0;i<80;i++){
+
+particles.push({
+x:x,
+y:y,
+angle:Math.random()*Math.PI*2,
+speed:Math.random()*5+2,
+life:100,
+color:`hsl(${Math.random()*360},100%,60%)`
+})
+
+}
+
+}
+
+function animateFireworks(){
+
+requestAnimationFrame(animateFireworks)
+
+ctx.fillStyle="rgba(0,0,0,0.2)"
+ctx.fillRect(0,0,canvas.width,canvas.height)
+
+particles.forEach((p,i)=>{
+
+p.x+=Math.cos(p.angle)*p.speed
+p.y+=Math.sin(p.angle)*p.speed
+
+p.life--
+
+ctx.beginPath()
+ctx.arc(p.x,p.y,2,0,Math.PI*2)
+ctx.fillStyle=p.color
+ctx.fill()
+
+if(p.life<=0)particles.splice(i,1)
+
+})
+
+}
+
+setInterval(createFirework,1200)
+
+/* show launch */
+
+function showLive(){
+
+doorLeft.style.transform="translateX(-100%)"
+doorRight.style.transform="translateX(100%)"
+
+final10.innerHTML="<h1 class='text-5xl font-bold'>New Sundharams Assure Website is Live Now!<br><br>🎉 Cheers 🎉<br><br><a class='button' href='https://sundharamsassure.com/'>Launch Now</a></h1>"
+
+animateFireworks()
+
+}
+
+/* start 10 second launch */
+
+function startFinalCountdown(){
+
+countdownBox.classList.add("hidden")
+final10.classList.remove("hidden")
+
+let sec=5
+finalSec.innerHTML=sec
+
+const timer=setInterval(()=>{
+
+sec--
+finalSec.innerHTML=sec
+
+if(sec<=0){
+
+clearInterval(timer)
+showLive()
+
+}
+
+},1000)
+
+}
+
+/* 5 min countdown display */
+
+const countdownTimer = setInterval(()=>{
+
+if(remaining <= 0){
+
+clearInterval(countdownTimer)
+
+minsEl.innerHTML = "00"
+secsEl.innerHTML = "00"
+
+return
+}
+
+remaining--
+
+let minutes = Math.floor(remaining/60)
+let seconds = remaining % 60
+
+minsEl.innerHTML = String(minutes).padStart(2,'0')
+secsEl.innerHTML = String(seconds).padStart(2,'0')
+
+},1000)
+
+/* music toggle */
+
+const music=document.getElementById("bgMusic")
+const toggle=document.getElementById("musicToggle")
+
+toggle.onclick=()=>{
+
+if(music.paused){
+
+music.play()
+toggle.innerText="🔊 Music On"
+
+}else{
+
+music.pause()
+toggle.innerText="🔇 Music Off"
+
+}
+
+}
+
+</script>
+
+</body>
+</html>
